@@ -25,8 +25,10 @@ int main(int argc, char *argv[]) {
     }
 
     int port = atoi(argv[1]);
-    int listener_fd, new_fd;
-    struct sockaddr_in server_addr, client_addr;
+    int listener_fd;
+    int new_fd;
+    struct sockaddr_in server_addr;
+    struct sockaddr_in client_addr;
     socklen_t addrlen;
 
     char buf[BUF_SIZE];
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]) {
         struct timeval timeout;
         timeout.tv_sec = 15;
         timeout.tv_usec = 0;
-        int activity = select(fdmax + 1, &read_fds, NULL, NULL, &timeout) == -1;
+        int activity = select(fdmax + 1, &read_fds, NULL, NULL, &timeout);
 
         if(activity == -1) {
             perror("select");
@@ -108,6 +110,8 @@ int main(int argc, char *argv[]) {
                     } else {
                         buf[nbytes] = '\0';
 
+                        if(buf[0] == '\n' || buf[0] == '\0') continue;
+
                         char command[BUF_SIZE];
                         char atom[BUF_SIZE];
                         unsigned int amount;
@@ -125,12 +129,20 @@ int main(int argc, char *argv[]) {
                                 printf("Error: unknown atom type '%s'\n", atom);
                                 continue;
                             }
+                            char response[BUF_SIZE];
 
-                            printf("Hydrogen: %u\n", hydrogen);
-                            printf("Oxygen: %u\n", oxygen);
-                            printf("Carbon: %u\n", carbon);
+                            snprintf(response,sizeof(response),
+                            "Hydrogen: %u\nOxygen: %u\nCarbon: %u\n",
+                            hydrogen,oxygen,carbon);
+
+                            send(i,response,strlen(response),0);
+
+                            printf("%s",response);
                         } else {
                             printf("Error: invalid command '%s'\n", buf);
+                            char *err = "Error: Invalid command format\n";
+                            send(i, err, strlen(err), 0);
+ 
                         }
                     }
                 }
