@@ -10,64 +10,16 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/select.h>
-
-#define BUF_SIZE 1024
-
+#include "formulas.h"
+unsigned int water = 0;
+unsigned int carbon_dioxide = 0;
+unsigned int glucose = 0;
+unsigned int alcohol = 0;
 unsigned int hydrogen = 0;
 unsigned int oxygen = 0;
 unsigned int carbon = 0;
 
-int create_h2o(unsigned int quantity) {
-    unsigned int need_h = 2 * quantity;
-    unsigned int need_o = 1 * quantity;
-
-    if (hydrogen >= need_h && oxygen >= need_o) {
-        hydrogen -= need_h;
-        oxygen -= need_o;
-        return 1;
-    }
-    return 0;
-}
-
-int create_carbon_dioxide(unsigned int quantity) {
-    unsigned int need_c = 1 * quantity;
-    unsigned int need_o = 2 * quantity;
-
-    if (carbon >= need_c && oxygen >= need_o) {
-        carbon -= need_c;
-        oxygen -= need_o;
-        return 1;
-    }
-    return 0;
-}
-
-int create_alcohol(unsigned int quantity) {
-    unsigned int need_c = 2 * quantity;
-    unsigned int need_h = 6 * quantity;
-    unsigned int need_o = 1 * quantity;
-
-    if (carbon >= need_c && hydrogen >= need_h && oxygen >= need_o) {
-        carbon -= need_c;
-        hydrogen -= need_h;
-        oxygen -= need_o;
-        return 1;
-    }
-    return 0;
-}
-
-int create_glucose(unsigned int quantity) {
-    unsigned int need_c = 6 * quantity;
-    unsigned int need_h = 12 * quantity;
-    unsigned int need_o = 6 * quantity;
-
-    if (carbon >= need_c && hydrogen >= need_h && oxygen >= need_o) {
-        carbon -= need_c;
-        hydrogen -= need_h;
-        oxygen -= need_o;
-        return 1;
-    }
-    return 0;
-}
+#define BUF_SIZE 1024
 
 
 int main(int argc, char *argv[]) {
@@ -175,12 +127,19 @@ int main(int argc, char *argv[]) {
                         int success = 0;
                         if (strcmp(molecule, "WATER") == 0) {
                             success = create_h2o(amount);
-                        } else if (strcmp(molecule, "CARBON") == 0 || strcmp(molecule, "CARBON_DIOXIDE") == 0) {
+                           if(success) water += amount;
+
+                        } else if (strcmp(molecule, "CARBON DIOXIDE") == 0) {
                             success = create_carbon_dioxide(amount);
+                            if(success) carbon += amount;
+
                         } else if (strcmp(molecule, "ALCOHOL") == 0) {
                             success = create_alcohol(amount);
+                            if(success) alcohol += amount;
+                            
                         } else if (strcmp(molecule, "GLUCOSE") == 0) {
                             success = create_glucose(amount);
+                            if(success) glucose += amount;
                         }
 
                         if (success) {

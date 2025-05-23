@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS =  -I../Q_2 -Wall -Wextra -g
 
 CLIENT_SRC = molecular_requester.c
-SERVER_SRC = molecular_suppliers.c
+SERVER_SRC = molecular_suppliers.c formulas.c
 
 CLIENT_BIN = requester
 SERVER_BIN = supplier
