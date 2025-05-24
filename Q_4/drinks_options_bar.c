@@ -1,4 +1,7 @@
-#include "drinks.h"
+#include "../Q_3/drinks.h"
+#include <getopt.h>
+#include <unistd.h>
+#include <signal.h>
 
 #define BUF_SIZE 1024
 
@@ -11,14 +14,92 @@ unsigned int hydrogen = 0;
 unsigned int oxygen = 0;
 unsigned int carbon = 0;
 
+void handle_timout(){
+    printf("Timeout reached.\nShutting down...");
+    exit(0);
+}
+
+
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <tcp_port> <udp_port>\n", argv[0]);
-        exit(EXIT_FAILURE);
+     int tcp_port = -1;
+     int udp_port = -1;
+     int timeout = -1;
+
+    struct option long_options[] = {
+        {"tcp-port",   required_argument, 0, 'T'},
+        {"udp-port",   required_argument, 0, 'U'},
+        {"oxygen",     required_argument, 0, 'o'},
+        {"carbon",     required_argument, 0, 'c'},
+        {"hydrogen",   required_argument, 0, 'h'},
+        {"timeout",    required_argument, 0, 't'},
+        {0, 0, 0, 0}
+    };
+
+
+
+int opt;
+
+    while ((opt = getopt_long(argc, argv, "T:U:o:c:h:t:", long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'T':
+                if (optarg != NULL)
+                    tcp_port = atoi(optarg);
+                else {
+                    fprintf(stderr, "Missing argument for -T (TCP port)\n");
+                    exit(1);
+                }
+                break;
+
+                case 'U':
+                    if (optarg != NULL)
+                    udp_port = atoi(optarg);
+                else {
+                    fprintf(stderr, "Missing argument for -U (UDP port)\n");
+                    exit(1);
+                }
+                break;
+
+                case 'o':
+                if (optarg != NULL)
+                    oxygen = atoi(optarg);
+                break;
+
+                case 'c':
+                if (optarg != NULL)
+                    carbon = atoi(optarg);
+                break;
+
+                case 'h':
+                if (optarg != NULL)
+                    hydrogen = atoi(optarg);
+                break;
+
+                case 't':
+                if (optarg != NULL)
+                    timeout = atoi(optarg);
+                break;
+
+            default:
+                fprintf(stderr, "Usage: %s -T <tcp-port> -U <udp-port> [options]\n", argv[0]);
+                exit(1);
+        }
     }
 
-    int tcp_port = atoi(argv[1]);
-    int udp_port = atoi(argv[2]);
+
+     if(tcp_port == -1 || udp_port == -1){
+        fprintf(stderr,"Error: -T <tcp_port> and -U <udp_port> are mandatory\n");
+        exit(EXIT_FAILURE);
+     }
+
+     printf("TCP Port: %d\nUDP Port: %d\nOxygen: %d\nCarbon: %d\nHydrogen: %d\nTimeout: %d\n",
+           tcp_port, udp_port, oxygen, carbon, hydrogen, timeout); // debug for checking
+
+    if(timeout != - 1){
+    signal(SIGALRM,handle_timout);
+    alarm(timeout);
+    }else {
+    printf("No timeout specified. Server will run indefinitely.\n");
+    }
 
     int listener_fd, udp_fd, tcp_fd;
     struct sockaddr_in tcp_addr, client_addr, udp_addr;
@@ -67,7 +148,6 @@ int main(int argc, char *argv[]) {
         read_fds = master_set;
         select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 
-       
 
         for (int i = 0; i <= fdmax; i++) {
             if (!FD_ISSET(i, &read_fds)) continue;
@@ -138,7 +218,7 @@ int main(int argc, char *argv[]) {
 
             if (i == listener_fd) {
                 addrlen = sizeof(client_addr);
-                tcp_fd = accept(listener_fd, (struct sockaddr *)&client_addr, &addrlen);
+                tcp_fd =accept(listener_fd, (struct sockaddr *)&client_addr, &addrlen);
                 if (tcp_fd != -1) {
                     FD_SET(tcp_fd, &master_set);
                     if (tcp_fd > fdmax) fdmax = tcp_fd;

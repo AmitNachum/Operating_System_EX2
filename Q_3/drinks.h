@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include "../Q_2/formulas.h"
+#include "../Q_1/atoms.h"
 
 extern unsigned int water;
 extern unsigned int carbon_dioxide;

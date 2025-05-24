@@ -14,5 +14,14 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include <stdbool.h>
+extern unsigned int hydrogen;
+extern unsigned int oxygen;
+extern unsigned int carbon;
+extern unsigned int water;
+extern unsigned int carbon_dioxide;
+extern unsigned int alcohol;
+extern unsigned int glucose;
+
+
 
 #endif

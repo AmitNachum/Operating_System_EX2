@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
 
     int port = atoi(argv[1]);
     int listener_fd;
-    int new_fd;
-    struct sockaddr_in server_addr;
+    int tcp_fd;
+    struct sockaddr_in tcp_addr;
     struct sockaddr_in client_addr;
     socklen_t addrlen;
 
@@ -39,12 +39,12 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);
-    memset(&(server_addr.sin_zero), '\0', 8);
+    tcp_addr.sin_family = AF_INET;
+    tcp_addr.sin_addr.s_addr = INADDR_ANY;
+    tcp_addr.sin_port = htons(port);
+    memset(&(tcp_addr.sin_zero), '\0', 8);
 
-    if (bind(listener_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+    if (bind(listener_fd, (struct sockaddr *)&tcp_addr, sizeof(tcp_addr)) == -1) {
         perror("bind");
         exit(EXIT_FAILURE);
     }
@@ -61,30 +61,23 @@ int main(int argc, char *argv[]) {
     
     while (true) {
         read_fds = master_set;
-        struct timeval timeout;
-        timeout.tv_sec = 15;
-        timeout.tv_usec = 0;
-        int activity = select(fdmax + 1, &read_fds, NULL, NULL, &timeout);
+        int activity = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 
         if(activity == -1) {
             perror("select");
             exit(EXIT_FAILURE);
         }
 
-        else if(activity == 0){
-            printf("Connection Timed out...\n");
-        }
-
         for (int i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)) {
                 if (i == listener_fd) {
                     addrlen = sizeof(client_addr);
-                    if ((new_fd = accept(listener_fd, (struct sockaddr *)&client_addr, &addrlen)) == -1) {
+                    if ((tcp_fd = accept(listener_fd, (struct sockaddr *)&client_addr, &addrlen)) == -1) {
                         perror("accept");
                     } else {
-                        FD_SET(new_fd, &master_set);
-                        if (new_fd > fdmax) fdmax = new_fd;
-                        printf("New connection on socket %d\n", new_fd);
+                        FD_SET(tcp_fd, &master_set);
+                        if (tcp_fd > fdmax) fdmax = tcp_fd;
+                        printf("New connection on socket %d\n", tcp_fd);
                     }
                 } else {
                     if ((nbytes = recv(i, buf, sizeof(buf) - 1, 0)) <= 0) {
