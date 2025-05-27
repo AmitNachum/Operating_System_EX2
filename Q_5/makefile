@@ -1,27 +1,15 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -g -I../Q_1 -I../Q_2 -I../Q_3
+CC=gcc
+CFLAGS=-Wall -Wextra -g
 
-all: client server
+# Targets
+all: client_q5 server_q5
 
-client: client_upgraded_options.o ../Q_2/formulas.o ../Q_3/drinks.o
-	$(CC) $(CFLAGS) -o $@ $^
+client_q5: client_upgraded_options.c
+	$(CC) $(CFLAGS) -o client_q5 client_upgraded_options.c
 
-server: upgraded_options_unixDS.o loading_servers.o ../Q_1/global.o ../Q_2/formulas.o ../Q_3/drinks.o
-	$(CC) $(CFLAGS) -o $@ $^
-
-# compile any .c in this dir
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# bring in the shared libraries from other exercises
-../Q_1/global.o:
-	$(CC) $(CFLAGS) -c ../Q_1/global.c -o $@
-
-../Q_2/formulas.o:
-	$(CC) $(CFLAGS) -c ../Q_2/formulas.c -o $@
-
-../Q_3/drinks.o:
-	$(CC) $(CFLAGS) -c ../Q_3/drinks.c -o $@
+server_q5: upgraded_options_unixDS.c ../Q_1/globals.c ../Q_2/formulas.c ../Q_3/drinks.c
+	$(CC) $(CFLAGS) -o server_q5 upgraded_options_unixDS.c ../Q_1/globals.c ../Q_2/formulas.c ../Q_3/drinks.c
 
 clean:
-	rm -f *.o client server ../Q_1/global.o ../Q_2/formulas.o ../Q_3/drinks.o
+	rm -f client_q5 server_q5
+	rm -f /tmp/uds_stream.sock /tmp/uds_dgram.sock /tmp/cli_uds_dgram.sock
