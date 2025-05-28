@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,18 +12,17 @@
 #include <netdb.h>
 #include <sys/select.h>
 #include "formulas.h"
+#include <gcov.h>
+#include <unistd.h>
 
-unsigned int water = 0;
-unsigned int carbon_dioxide = 0;
-unsigned int glucose = 0;
-unsigned int alcohol = 0;
-unsigned int hydrogen = 0;
-unsigned int oxygen = 0;
-unsigned int carbon = 0;
+extern void __gcov_dump(void);
 
 #define BUF_SIZE 1024
 
 int main(int argc, char *argv[]) {
+    hydrogen = 100;
+    carbon = 100;
+    oxygen = 100;
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <tcp_port> <udp_port>\n", argv[0]);
         exit(EXIT_FAILURE);
@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
                     if (parsed != 2) {
                         snprintf(response, sizeof(response), "Error: Invalid DELIVER format\n");
                         sendto(udp_fd, response, strlen(response), 0, (struct sockaddr *)&udp_client, addr_len);
+                        
                         continue;
                     }
 
@@ -138,6 +139,7 @@ int main(int argc, char *argv[]) {
                         sendto(udp_fd, response, strlen(response), 0, (struct sockaddr *)&udp_client, addr_len);
                         continue;
                     }
+                    
 
                     snprintf(response, sizeof(response), "%s: %s x%u\n",
                              success ? "DELIVERED" : "FAILED: Not enough atoms for",
@@ -147,6 +149,12 @@ int main(int argc, char *argv[]) {
                 } else {
                     snprintf(response, sizeof(response), "Error: Unknown command\n");
                     sendto(udp_fd, response, strlen(response), 0, (struct sockaddr *)&udp_client, addr_len);
+                }
+                  if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                        fflush(NULL);
+                        __gcov_dump(); 
+                        exit(0);
                 }
             } else if (i == listener_fd) {
                 addrlen = sizeof(client_addr);

@@ -1,17 +1,17 @@
 #include "drinks.h"
+#include <gcov.h>
 
+extern void __gcov_dump (void);
 #define BUF_SIZE 1024
 
-unsigned int water = 0;
-unsigned int carbon_dioxide = 0;
-unsigned int glucose = 0;
-unsigned int alcohol = 0;
 
-unsigned int hydrogen = 0;
-unsigned int oxygen = 0;
-unsigned int carbon = 0;
+
 
 int main(int argc, char *argv[]) {
+water = 100;
+carbon_dioxide = 100;
+alcohol = 100;
+glucose = 100;
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <tcp_port> <udp_port>\n", argv[0]);
         exit(EXIT_FAILURE);
@@ -95,6 +95,12 @@ int main(int argc, char *argv[]) {
                 } else {
                     printf("Invalid drink: '%s'\n", drink);
                 }
+            if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                        fflush(NULL);
+                        __gcov_dump(); 
+                        exit(0);
+                }
                 continue;
             }
 
@@ -133,6 +139,12 @@ int main(int argc, char *argv[]) {
                          success ? "DELIVERED" : "FAILED: Not enough atoms for", molecule, amount);
                 sendto(udp_fd, response, strlen(response), 0, (struct sockaddr *)&udp_client, addr_len);
                 printf("UDP %s", response);
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
                 continue;
             }
 

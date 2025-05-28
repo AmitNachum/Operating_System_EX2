@@ -7,11 +7,15 @@
 #include <string.h>
 #include "../Q_2/formulas.h"
 #include "../Q_1/atoms.h"
+#include <gcov.h>
+
+extern void __gcov_dump (void);
 
 #define BUF_SIZE 1024
 #define STREAM_UNIX "/tmp/uds_stream.sock"
 #define UDP_UNIX "/tmp/uds_dgram.sock"
 #define FILE_NAME "Atom_supply.txt"
+
 
 
 void handle_timout() {
@@ -37,7 +41,7 @@ static const char* active_file = NULL;
 
 typedef struct{
     unsigned int water_amount;
-    unsigned int carbon_dioxide;
+    unsigned int carbon_dioxide_amount;
     unsigned int alcohol_amount;
     unsigned int glucose_amount;
     FILE *file_pointer;
@@ -116,63 +120,68 @@ int main(int argc, char *argv[]) {
     
 
     //file does not exists
-    if(using_file != NULL || access(FILE_NAME,F_OK) != 0){
-    
-     active_file = using_file;
-     
- 
-    if(access(active_file,F_OK) != 0){
-        map_molecules.file_pointer = fopen(active_file,"w+");
-        if(map_molecules.file_pointer == NULL){
-            perror("Fopen failed.\nAbort....\n");
+    if (using_file != NULL || access(FILE_NAME, F_OK) != 0) {
+    active_file = using_file;
+
+    // If the file does not exist, create and initialize it
+    if (access(active_file, F_OK) != 0) {
+        map_molecules.file_pointer = fopen(active_file, "w+");
+        if (!map_molecules.file_pointer) {
+            perror("fopen failed (create)");
             exit(EXIT_FAILURE);
         }
+
+        // Initialize values from atom globals
         map_molecules.water_amount = water;
-        fprintf(stderr,"Water:%u",map_molecules.water_amount);
-        map_molecules.carbon_dioxide = carbon_dioxide;
-        map_molecules.alcohol_amount = hydrogen;
+        map_molecules.carbon_dioxide_amount = carbon_dioxide;
+        map_molecules.alcohol_amount = alcohol;
         map_molecules.glucose_amount = glucose;
-        fprintf(map_molecules.file_pointer,"Water amount:%u\n",map_molecules.water_amount);
-        fprintf(map_molecules.file_pointer,"Carbon dioxide amount:%u\n",map_molecules.carbon_dioxide);
-        fprintf(map_molecules.file_pointer,"Alcohol amount:%u\n",map_molecules.alcohol_amount);
-        fprintf(map_molecules.file_pointer,"Glucose amount:%u\n",map_molecules.glucose_amount);
+
+        // Write to file
+        fprintf(map_molecules.file_pointer, "Water amount:%u\n", map_molecules.water_amount);
+        fprintf(map_molecules.file_pointer, "Carbon dioxide amount:%u\n", map_molecules.carbon_dioxide_amount);
+        fprintf(map_molecules.file_pointer, "Alcohol amount:%u\n", map_molecules.alcohol_amount);
+        fprintf(map_molecules.file_pointer, "Glucose amount:%u\n", map_molecules.glucose_amount);
+        fflush(map_molecules.file_pointer);
         rewind(map_molecules.file_pointer);
 
-    }else {
+    } else {
+        // File exists, open without truncating
         map_molecules.file_pointer = fopen(active_file, "r+");
         if (!map_molecules.file_pointer) {
-            perror("fopen failed");
+            perror("fopen failed (load)");
             exit(EXIT_FAILURE);
         }
-
         rewind(map_molecules.file_pointer);
+        // Load values from file
         char line[BUF_SIZE];
-        while(fgets(line,sizeof(line),map_molecules.file_pointer)){
-            if(strncmp(line,"Water amount:",13) == 0){
-                sscanf(line + 13,"%u",&map_molecules.water_amount);
-            }
-            else if(strncmp(line,"Carbon dioxide amount:",23) == 0){
-                sscanf(line + 23,"%u",&map_molecules.carbon_dioxide);
-            }
-            else if(strncmp(line,"Alcohol amount:",15) == 0){
-                sscanf(line + 15,"%u",&map_molecules.alcohol_amount);
-            }
-            else if(strncmp(line,"Glucose amount:",15) == 0){
-                sscanf(line + 15,"%u",&map_molecules.glucose_amount);
-            }
-
+        while (fgets(line, sizeof(line), map_molecules.file_pointer)) {
+            if (strncmp(line, "Water amount:", 13) == 0)
+                sscanf(line + 13, "%u", &map_molecules.water_amount);
+            else if (strncmp(line, "Carbon dioxide amount:", 22) == 0)
+                sscanf(line + 22, "%u", &map_molecules.carbon_dioxide_amount);
+            else if (strncmp(line, "Alcohol amount:", 15) == 0)
+                sscanf(line + 15, "%u", &map_molecules.alcohol_amount);
+            else if (strncmp(line, "Glucose amount:", 15) == 0)
+                sscanf(line + 15, "%u", &map_molecules.glucose_amount);
         }
+       
 
+        // Update global atom values
+        water = map_molecules.water_amount;
+        alcohol = map_molecules.alcohol_amount;
+        glucose = map_molecules.glucose_amount;
+        carbon_dioxide = map_molecules.carbon_dioxide_amount;
     }
 }
-    rewind(map_molecules.file_pointer);
+
     
 
 
 
     if ((tcp_unix != NULL || udp_unix != NULL) && (tcp_port != -1 || udp_port != -1)) {
         fprintf(stderr, "Error: Cannot use both UDS and TCP/UDP ports simultaneously.\n");
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); 
     }
 
 
@@ -258,6 +267,13 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                 printf("%s", err);
                 send(client_fd, err, strlen(err), 0);
             }
+                             
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
         }
 
         close(client_fd);
@@ -353,6 +369,12 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                      success ? "DELIVERED" : "FAILED: Not enough atoms for", molecule, amount);
             sendto(dgram_fd, response, strlen(response), 0,
                    (struct sockaddr *)&client_addr, client_len);
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
         }
 
         close(dgram_fd);
@@ -411,7 +433,8 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
     while (1) {
         read_fds = master_set;
         select(fdmax + 1, &read_fds, NULL, NULL, NULL);
-
+        int index = 0;
+        int using_coverage = 0;
 
         for (int i = 0; i <= fdmax; i++) {
             if (!FD_ISSET(i, &read_fds)) continue;
@@ -488,6 +511,19 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                          success ? "DELIVERED" : "FAILED: Not enough atoms for", molecule, amount);
                 sendto(udp_fd, response, strlen(response), 0, (struct sockaddr *)&udp_client, addr_len);
                 printf("UDP %s", response);
+                
+                if (getenv("COVERAGE_MODE")) {
+                    using_coverage = 1;
+
+                    if(index < 3){index++;continue;}
+
+                    usleep(100);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(EXIT_SUCCESS);
+                }
+                if(!using_coverage){(void)i;}
+
                 continue;
             }
 
@@ -536,6 +572,12 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                 char *err = "Error: Invalid command format\n";
                 send(i, err, strlen(err), 0);
             }
+            if (getenv("COVERAGE_MODE")) {
+                usleep(1000);
+                fflush(NULL);
+                __gcov_dump(); 
+                exit(0);
+            }     
         }
     }
 

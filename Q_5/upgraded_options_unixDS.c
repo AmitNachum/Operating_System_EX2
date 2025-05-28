@@ -7,10 +7,14 @@
 #include <string.h>
 #include "../Q_2/formulas.h"
 #include "../Q_1/atoms.h"
+#include <gcov.h>
+
+extern void __gcov_dump (void);
 
 #define BUF_SIZE 1024
 #define STREAM_UNIX "/tmp/uds_stream.sock"
 #define UDP_UNIX "/tmp/uds_dgram.sock"
+
 
 void handle_timout() {
     printf("Timeout reached.\nShutting down...\n");
@@ -21,6 +25,7 @@ static char* tcp_unix = NULL;
 static char* udp_unix = NULL;
 
 int main(int argc, char *argv[]) {
+
     unlink(STREAM_UNIX);
     unlink(UDP_UNIX);
 
@@ -136,6 +141,12 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                 printf("%s", err);
                 send(client_fd, err, strlen(err), 0);
             }
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
         }
 
         close(client_fd);
@@ -216,7 +227,14 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                      success ? "DELIVERED" : "FAILED: Not enough atoms for", molecule, amount);
             sendto(dgram_fd, response, strlen(response), 0,
                    (struct sockaddr *)&client_addr, client_len);
+
         }
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
 
         close(dgram_fd);
         return 0;
@@ -302,6 +320,12 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                     printf("Can generate %d CHAMPAGNES\n", count_champagne());
                 } else {
                     printf("Invalid drink: '%s'\n", drink);
+                }
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
                 }
                 continue;
             }
@@ -392,6 +416,12 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                 char *err = "Error: Invalid command format\n";
                 send(i, err, strlen(err), 0);
             }
+            if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
         }
     }
 

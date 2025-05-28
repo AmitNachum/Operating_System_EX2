@@ -51,10 +51,8 @@ int main() {
     }
 
 
-    connect(sock_fd,res->ai_addr, res->ai_addrlen);
+    
 
-
-    freeaddrinfo(res);
 
 
     char buf[BUF_SIZE];
@@ -68,6 +66,7 @@ int main() {
         if(strncmp(buf,"exit",4) == 0) break;
 
         if(strncmp(buf,"ADD",3) == 0){
+        connect(sock_fd,res->ai_addr, res->ai_addrlen);
         send(sock_fd,buf,strlen(buf),0);
 
         char response[BUF_SIZE];
@@ -103,7 +102,10 @@ int main() {
     close(sock_fd);
     close(sock_udp_fd);
     freeaddrinfo(res_udp);
+    freeaddrinfo(res);
     printf("\nDisconnected\n");
+    if (getenv("COVERAGE_MODE")) exit(0);
+
 return 0;
 
 }

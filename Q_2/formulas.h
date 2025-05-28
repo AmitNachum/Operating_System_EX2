@@ -12,12 +12,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/select.h>
+#include "../Q_1/atoms.h"
 
 extern unsigned int hydrogen;
 extern unsigned int oxygen;
 extern unsigned int carbon;
 extern unsigned int water;
-extern unsigned int carbon_dioxide;
+extern unsigned int carbon_dioxide; 
 extern unsigned int glucose;
 extern unsigned int alcohol;
 

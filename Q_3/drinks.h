@@ -15,11 +15,6 @@
 #include "../Q_2/formulas.h"
 #include "../Q_1/atoms.h"
 
-extern unsigned int water;
-extern unsigned int carbon_dioxide;
-extern unsigned int glucose;
-extern unsigned int alcohol;
-
 unsigned int min3(unsigned int a, unsigned int b, unsigned int c);
 int count_soft_drink();
 int count_vodka();

@@ -2,19 +2,13 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include "../Q_2/formulas.h"
+#include "../Q_1/atoms.h"
 #define BUF_SIZE 1024
-
-unsigned int water = 0;
-unsigned int carbon_dioxide = 0;
-unsigned int glucose = 0;
-unsigned int alcohol = 0;
-
-unsigned int hydrogen = 0;
-unsigned int oxygen = 0;
-unsigned int carbon = 0;
+extern void __gcov_dump (void);
 
 void handle_timout(){
+
     printf("Timeout reached.\nShutting down...");
     exit(0);
 }
@@ -24,6 +18,10 @@ int main(int argc, char *argv[]) {
      int tcp_port = -1;
      int udp_port = -1;
      int timeout = -1;
+     water = 100;
+     alcohol = 100;
+     glucose = 100;
+     carbon_dioxide = 100;
 
     struct option long_options[] = {
         {"tcp-port",   required_argument, 0, 'T'},

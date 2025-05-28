@@ -1,9 +1,5 @@
 #include "drinks.h"
 
-
-
-
-
 unsigned int min3(unsigned int a, unsigned int b, unsigned int c) {
     unsigned int min = a;
     if (b < min) min = b;

@@ -1,27 +1,62 @@
-CC = gcc
-CFLAGS =  -I../Q_2 -Wall -Wextra -g
+# ——————————————————————————————
+# Makefile for gcc --coverage (separate compile + link)
+# ——————————————————————————————
+CC        := gcc
+CFLAGS    := --coverage -g -Wall -Wextra
+LDFLAGS   := --coverage
 
-CLIENT_SRC = molecular_requester.c
-SERVER_SRC = molecular_suppliers.c formulas.c
+CLIENT           := requester
+SERVER           := supplier
 
-CLIENT_BIN = requester
-SERVER_BIN = supplier
+# Sources
+REQ_SRC          := molecular_requester.c
+SUP_SRC          := molecular_suppliers.c
+FORM_SRC         := formulas.c
+GLOB_SRC         := ../Q_1/globals.c
 
-.PHONY: all clean
+# Objects (one .o per .c)
+REQ_OBJ          := $(REQ_SRC:.c=.o)
+SUP_OBJ          := $(SUP_SRC:.c=.o)
+FORM_OBJ         := $(FORM_SRC:.c=.o)
+GLOB_OBJ         := $(GLOB_SRC:.c=.o)
 
-all: $(CLIENT_BIN) $(SERVER_BIN)
+TCP_PORT         := 5555
+UDP_PORT         := 6666
 
-$(CLIENT_BIN): $(CLIENT_SRC)
-	$(CC) $(CFLAGS) -o $(CLIENT_BIN) $(CLIENT_SRC)
+.PHONY: all clean coverage
 
-$(SERVER_BIN): $(SERVER_SRC)
-	$(CC) $(CFLAGS) -o $(SERVER_BIN) $(SERVER_SRC)
+all: $(CLIENT) $(SERVER)
 
-run-client: $(CLIENT_BIN)
-	./$(CLIENT_BIN)
+# Compile each .c to .o + .gcno
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-run-server: $(SERVER_BIN)
-	./$(SERVER_BIN) 5555 6666
+# Compile globals.c (in parent dir) to globals.o + globals.gcno
+../Q_1/%.o: ../Q_1/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Link the requester
+$(CLIENT): $(REQ_OBJ)
+	$(CC) $(LDFLAGS) -o $@ $^
+
+# Link the server
+$(SERVER): $(SUP_OBJ) $(FORM_OBJ) $(GLOB_OBJ)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f $(CLIENT_BIN) $(SERVER_BIN)
+	@echo "🧹 Cleaning up binaries, coverage files…and any server still bound on ports $(TCP_PORT)/tcp or $(UDP_PORT)/udp"
+	# kill any process listening on TCP port
+	-@fuser -k $(TCP_PORT)/tcp >/dev/null 2>&1
+	# kill any process listening on UDP port
+	-@fuser -k $(UDP_PORT)/udp >/dev/null 2>&1
+	rm -f $(CLIENT) $(SERVER) \
+	      *.o ../Q_1/*.o \
+	      *.gcno *.gcda *.gcov \../Q_1/globals.gcno
+
+
+coverage: clean all
+	@echo "\n>>> Running coverage test…"
+	@env COVERAGE_MODE=1 ./$(SERVER) $(TCP_PORT) $(UDP_PORT) & \
+	sleep 1 && echo "DELIVER WATER 2" | ./$(CLIENT); \
+	wait; \
+	gcov -b molecular_suppliers.c formulas.c molecular_requester.c

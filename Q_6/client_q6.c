@@ -54,7 +54,6 @@ int main() {
     
 
 
-    freeaddrinfo(res);
 
 
     char buf[BUF_SIZE];
@@ -79,10 +78,12 @@ int main() {
         }
     }
         else if(strncmp(buf,"DELIVER",7) == 0){
+            
             sendto(sock_udp_fd,
                 buf,strlen(buf),
             0,res_udp->ai_addr
             ,res_udp->ai_addrlen);
+           
 
             char response[BUF_SIZE];
             struct sockaddr_storage from;
@@ -90,6 +91,7 @@ int main() {
             socklen_t from_len = sizeof(from);
             int n = recvfrom(sock_udp_fd,response,sizeof(response) - 1,
              0, (struct sockaddr *)&from,&from_len);
+
 
              if(n > 0){
                 response[n] ='\0';
@@ -99,8 +101,9 @@ int main() {
                 printf("Unknown command. Use ADD or DELIVER.\n");
              }
         }
-    }
+    }   
 
+    freeaddrinfo(res);
     close(sock_fd);
     close(sock_udp_fd);
     freeaddrinfo(res_udp);
