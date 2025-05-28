@@ -1,4 +1,4 @@
-Water amount:2
-Carbon dioxide amount:1
-Alcohol amount:0
+Water amount:0
+Carbon dioxide amount:0
+Alcohol amount:5
 Glucose amount:0

@@ -116,13 +116,12 @@ int main(int argc, char *argv[]) {
     
 
     //file does not exists
-    if(using_file != NULL){
+    if(using_file != NULL || access(FILE_NAME,F_OK) != 0){
     
      active_file = using_file;
      
  
     if(access(active_file,F_OK) != 0){
-        fprintf(stderr,"alksdnfklnasdf");
         map_molecules.file_pointer = fopen(active_file,"w+");
         if(map_molecules.file_pointer == NULL){
             perror("Fopen failed.\nAbort....\n");
@@ -139,10 +138,8 @@ int main(int argc, char *argv[]) {
         fprintf(map_molecules.file_pointer,"Glucose amount:%u\n",map_molecules.glucose_amount);
         rewind(map_molecules.file_pointer);
 
-    }
-    
-    //the file does exist
-         map_molecules.file_pointer = fopen(active_file, "r+");
+    }else {
+        map_molecules.file_pointer = fopen(active_file, "r+");
         if (!map_molecules.file_pointer) {
             perror("fopen failed");
             exit(EXIT_FAILURE);
@@ -167,7 +164,9 @@ int main(int argc, char *argv[]) {
         }
 
     }
+}
     rewind(map_molecules.file_pointer);
+    
 
 
 
