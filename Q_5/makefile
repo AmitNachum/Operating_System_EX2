@@ -106,7 +106,7 @@ coverage: clean all
 	@env COVERAGE_MODE=1 ./$(SERVER)                                      \
 	  -s $(UDS_STREAM)                                                    \
 	  -T 0 -U 0                                                          \
-	  -o 100 -c 100 -h 100 -t 100                                                \
+	  -o 100 -c 100 -h 100 -t 10                                                \
 	  &                                                                   \
 
 	sleep 1

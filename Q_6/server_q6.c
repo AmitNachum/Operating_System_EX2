@@ -430,11 +430,11 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
     if (STDIN_FILENO > fdmax) fdmax = STDIN_FILENO;
 
     printf("Atom warehouse server running on TCP %d and UDP %d...\n", tcp_port, udp_port);
+    static int index = 0;
     while (1) {
         read_fds = master_set;
         select(fdmax + 1, &read_fds, NULL, NULL, NULL);
-        int index = 0;
-        int using_coverage = 0;
+    
 
         for (int i = 0; i <= fdmax; i++) {
             if (!FD_ISSET(i, &read_fds)) continue;
@@ -513,16 +513,15 @@ printf("TCP Port: %d\nUDP Port: %d\nUDP PATH: %s\nTCP PATH: %s\nOxygen: %d\nCarb
                 printf("UDP %s", response);
                 
                 if (getenv("COVERAGE_MODE")) {
-                    using_coverage = 1;
-
                     if(index < 3){index++;continue;}
-
+                    else{
                     usleep(100);
                     fflush(NULL);
                     __gcov_dump(); 
                     exit(EXIT_SUCCESS);
                 }
-                if(!using_coverage){(void)i;}
+                }
+            
 
                 continue;
             }

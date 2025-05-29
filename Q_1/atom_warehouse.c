@@ -1,10 +1,13 @@
 #include "atoms.h"
+#include <gcov.h>
 #define MAX_CLIENT FD_SETSIZE
 #define BUF_SIZE 1024
 
 unsigned int hydrogen = 0;
 unsigned int oxygen = 0;
 unsigned int carbon = 0;
+
+extern void __gcov_dump (void);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -125,6 +128,13 @@ int main(int argc, char *argv[]) {
                             send(i, err, strlen(err), 0);
  
                         }
+                if (getenv("COVERAGE_MODE")) {
+                    usleep(1000);
+                    fflush(NULL);
+                    __gcov_dump(); 
+                    exit(0);
+                }
+
                     }
                 }
             }

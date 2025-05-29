@@ -19,12 +19,15 @@ $(CLIENT): $(CLIENT_SRC)
 	$(CC) $(CFLAGS) $(CLIENT_SRC) -o $(CLIENT) $(LDFLAGS)
 
 clean:
-	rm -f $(SERVER) $(CLIENT) *.gcno *.gcda *.gcov
+	@echo "Cleaning build files and killing lingering server processes..."
+	-kill -9 $(shell pgrep -f ./$(SERVER)) 2>/dev/null || true
+	rm -f $(SERVER) $(CLIENT) *.gcno *.gcda *.gcov *.o
 
 coverage: all
-	./$(SERVER) 5555 & \
+	COVERAGE_MODE=1 ./$(SERVER) 5555 & \
 	SERVER_PID=$$!; \
 	sleep 1; \
 	echo "ADD HYDROGEN 2" | ./$(CLIENT) 5555; \
 	wait $$SERVER_PID; \
 	gcov $(SERVER_SRC) $(CLIENT_SRC)
+

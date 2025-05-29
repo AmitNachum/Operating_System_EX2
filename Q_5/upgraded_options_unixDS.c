@@ -8,8 +8,7 @@
 #include "../Q_2/formulas.h"
 #include "../Q_1/atoms.h"
 #include <gcov.h>
-
-extern void __gcov_dump (void);
+extern void __gcov_dump(void);
 
 #define BUF_SIZE 1024
 #define STREAM_UNIX "/tmp/uds_stream.sock"
