@@ -76,9 +76,13 @@ coverage: clean all
 	  </dev/null &
 
 	@printf "\
+	@sleep 2 \
 DELIVER WATER 25\n\
+    @sleep 2 \
 DELIVER CARBON_DIOXIDE 34\n\
+    @sleep 2 \
 DELIVER ALCOHOL 10\n\
+    @sleep 2 \
 DELIVER GLUCOSE 2\n\
 exit\n" | ./$(CLIENT)
 
